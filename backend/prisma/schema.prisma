@@ -1,0 +1,171 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                String             @id @default(cuid())
+  email             String             @unique
+  name              String
+  password          String?
+  avatarUrl         String?
+  googleId          String?            @unique
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  calendars         Calendar[]
+  events            Event[]
+  notes             Note[]
+  reminders         Reminder[]
+  pushSubscriptions PushSubscription[]
+  settings          UserSettings?
+  refreshTokens     RefreshToken[]
+
+  @@map("users")
+}
+
+model Calendar {
+  id          String   @id @default(cuid())
+  name        String
+  emoji       String   @default("⭐")
+  color       String   @default("sky")
+  description String?
+  isDefault   Boolean  @default(false)
+  isVisible   Boolean  @default(true)
+  isArchived  Boolean  @default(false)
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events Event[]
+  notes  Note[]
+
+  @@unique([userId, name])
+  @@map("calendars")
+}
+
+model UserSettings {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  theme                String   @default("system")
+  language             String   @default("en")
+  dateFormat           String   @default("MM/DD/YYYY")
+  timeFormat           String   @default("12h")
+  weekStartsOn         Int      @default(0)
+  notificationsEnabled Boolean  @default(true)
+  defaultReminderTime  String   @default("06:00")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model Event {
+  id             String     @id @default(cuid())
+  title          String
+  description    String?
+  emoji          String?
+  highlightColor String     @default("#7C3AED")
+  highlightStyle String     @default("background")
+  startAt        DateTime
+  endAt          DateTime
+  isAllDay       Boolean    @default(true)
+  location       String?
+  priority       String     @default("medium")
+  recurrenceRule String?
+  recurrenceEnd  DateTime?
+  userId         String
+  calendarId     String
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  deletedAt      DateTime?
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  calendar  Calendar   @relation(fields: [calendarId], references: [id], onDelete: Cascade)
+  reminders Reminder[]
+
+  @@index([userId, startAt, endAt])
+  @@index([calendarId])
+  @@index([deletedAt])
+  @@map("events")
+}
+
+model Note {
+  id         String    @id @default(cuid())
+  title      String?
+  content    String
+  date       DateTime
+  userId     String
+  calendarId String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  calendar Calendar? @relation(fields: [calendarId], references: [id], onDelete: SetNull)
+
+  @@index([userId, date])
+  @@index([deletedAt])
+  @@map("notes")
+}
+
+model Reminder {
+  id          String    @id @default(cuid())
+  userId      String
+  eventId     String
+  type        String    @default("start_of_day")
+  scheduledAt DateTime
+  timezone    String    @default("UTC")
+  enabled     Boolean   @default(true)
+  status      String    @default("PENDING")
+  sentAt      DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([userId, scheduledAt])
+  @@index([status, scheduledAt])
+  @@index([eventId])
+  @@map("reminders")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}

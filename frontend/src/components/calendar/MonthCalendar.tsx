@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { CalendarGrid } from "@/components/calendar/CalendarGrid";
 import { SelectedDatePanel } from "@/components/calendar/SelectedDatePanel";
@@ -7,14 +7,26 @@ import { EventForm } from "@/components/events/EventForm";
 import { EventModalDialog } from "@/components/events/EventModalDialog";
 import { NoteDetailModal } from "@/components/notes/NoteDetailModal";
 import { NoteEditorModal } from "@/components/notes/NoteEditorModal";
-import { useCalendarEngine, useEvents, useNotes } from "@/hooks";
+import { useCalendarEngine, useEvents, useFestivals, useNotes } from "@/hooks";
+import { useCalendarStore } from "@/store";
 import type { EventFormValues, EventItem, NoteItem } from "@/types";
 import { addDays, dateKey } from "@/utils/calendar";
 
 export function MonthCalendar() {
   const { month, weekdayLabels, direction, setVisibleMonth } = useCalendarEngine();
+  const requestedDate = useCalendarStore((state) => state.requestedDate);
+  const setRequestedDate = useCalendarStore((state) => state.setRequestedDate);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isDetailsOpen, setDetailsOpen] = useState(false);
+
+  // Consume external date navigation requests (e.g. from Global Search)
+  useEffect(() => {
+    if (requestedDate) {
+      setSelectedDate(requestedDate);
+      setDetailsOpen(true);
+      setRequestedDate(null);
+    }
+  }, [requestedDate, setRequestedDate]);
 
   // Event Modals state
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
@@ -49,6 +61,13 @@ export function MonthCalendar() {
     endDateStr
   );
 
+  const visibleStartKey = month.days[0]?.dateKey;
+  const visibleEndKey = month.days[month.days.length - 1]?.dateKey;
+  const { festivalsByDate } = useFestivals({
+    dateStart: visibleStartKey,
+    dateEnd: visibleEndKey,
+  });
+
   // Group events by YYYY-MM-DD
   const eventsByDate = useMemo(() => {
     const map: Record<string, EventItem[]> = {};
@@ -80,6 +99,11 @@ export function MonthCalendar() {
     if (!selectedDate) return [];
     return notesByDate[dateKey(selectedDate)] || [];
   }, [notesByDate, selectedDate]);
+
+  const selectedDateFestivals = useMemo(() => {
+    if (!selectedDate) return [];
+    return festivalsByDate[dateKey(selectedDate)] || [];
+  }, [festivalsByDate, selectedDate]);
 
   const selectDate = useCallback(
     (date: Date) => {
@@ -163,6 +187,7 @@ export function MonthCalendar() {
           selectedDate={selectedDate}
           eventsByDate={eventsByDate}
           notesByDate={notesByDate}
+          festivalsByDate={festivalsByDate}
           onSelectDate={selectDate}
           onEventClick={(evt) => setViewingEvent(evt)}
           onKeyDown={handleKeyDown}
@@ -173,12 +198,14 @@ export function MonthCalendar() {
         selectedDate={selectedDate}
         events={selectedDateEvents}
         notes={selectedDateNotes}
+        festivals={selectedDateFestivals}
         isOpen={isDetailsOpen}
         onClose={() => setDetailsOpen(false)}
         onAddEvent={() => setIsCreateEventOpen(true)}
         onAddNote={() => setIsCreateNoteOpen(true)}
         onEventClick={(evt) => setViewingEvent(evt)}
         onNoteClick={(note) => setViewingNote(note)}
+        onJumpToDate={selectDate}
       />
 
       {/* Create Event Modal */}

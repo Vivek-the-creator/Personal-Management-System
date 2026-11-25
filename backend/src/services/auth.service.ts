@@ -181,7 +181,7 @@ export async function refreshTokens(oldRefreshToken: string): Promise<{
     throw new AppError(401, "Refresh token expired or revoked");
   }
 
-  await prisma.refreshToken.delete({ where: { id: stored.id } });
+  await prisma.refreshToken.deleteMany({ where: { id: stored.id } });
 
   const { accessToken, refreshToken: newRefreshToken } = await issueAuthTokens(stored.user);
 

@@ -2,13 +2,14 @@ import { memo } from "react";
 import { motion } from "framer-motion";
 import { FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { CalendarDay, EventItem } from "@/types";
+import type { CalendarDay, EventItem, FestivalRecord } from "@/types";
 import { getDerivedColorStyles } from "@/utils/color-contrast.utils";
 
 interface CalendarCellProps {
   day: CalendarDay;
   isSelected: boolean;
   events?: EventItem[];
+  festivals?: FestivalRecord[];
   hasNotes?: boolean;
   onSelect: (date: Date) => void;
   onEventClick?: (event: EventItem) => void;
@@ -18,12 +19,15 @@ function CalendarCellComponent({
   day,
   isSelected,
   events = [],
+  festivals = [],
   hasNotes = false,
   onSelect,
   onEventClick,
 }: CalendarCellProps) {
   const visibleEvents = events.slice(0, 2);
   const overflowCount = events.length - visibleEvents.length;
+  const primaryFestival = festivals[0];
+  const extraFestivalsCount = festivals.length > 1 ? festivals.length - 1 : 0;
 
   return (
     <motion.button
@@ -73,6 +77,22 @@ function CalendarCellComponent({
           </div>
         )}
       </div>
+
+      {/* Subtle Festival / Holiday Indicator */}
+      {primaryFestival && (
+        <div
+          className="flex w-full items-center gap-1 overflow-hidden rounded border border-amber-500/20 bg-amber-500/8 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:text-amber-200"
+          title={festivals.map((f) => `${f.emoji} ${f.name}`).join(" · ")}
+        >
+          <span className="shrink-0 text-[11px] leading-none">{primaryFestival.emoji}</span>
+          <span className="hidden truncate sm:inline">{primaryFestival.name}</span>
+          {extraFestivalsCount > 0 && (
+            <span className="ml-auto shrink-0 text-[9px] font-semibold opacity-80">
+              +{extraFestivalsCount}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Events List Container */}
       <div className="mt-1 flex w-full flex-col gap-1 overflow-hidden">

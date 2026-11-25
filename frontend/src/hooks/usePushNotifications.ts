@@ -28,19 +28,24 @@ export function usePushNotifications() {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
 
-    // Load Push Status & VAPID Key
-    getPushStatus()
-      .then((status) => {
-        setVapidKey(status.vapidPublicKey);
-        setIsSubscribed(status.hasSubscription);
-      })
-      .catch(() => {});
+    // Load Push Status & VAPID Key (only if online)
+    if (navigator.onLine) {
+      getPushStatus()
+        .then((status) => {
+          setVapidKey(status.vapidPublicKey);
+          setIsSubscribed(status.hasSubscription);
+        })
+        .catch(() => {});
+    }
   }, []);
 
   async function requestPermissionAndSubscribe(): Promise<boolean> {
     if (typeof window === "undefined" || !("Notification" in window) || !("serviceWorker" in navigator)) {
       setPermission("unsupported");
       return false;
+    }
+    if (!navigator.onLine) {
+      return true; // Skip server subscription step when offline
     }
 
     setIsLoading(true);

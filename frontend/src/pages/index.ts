@@ -9,5 +9,6 @@ export { GeneralSettingsPage } from "./settings/GeneralSettingsPage";
 export { AppearanceSettingsPage } from "./settings/AppearanceSettingsPage";
 export { AccountSettingsPage } from "./settings/AccountSettingsPage";
 export { NotificationsSettingsPage } from "./settings/NotificationsSettingsPage";
+export { SyncSettingsPage } from "./settings/SyncSettingsPage";
 export { AboutSettingsPage } from "./settings/AboutSettingsPage";
 export { NotFoundPage } from "./NotFoundPage";

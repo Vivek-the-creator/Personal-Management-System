@@ -4,15 +4,18 @@ import { nextMonth, previousMonth, startOfMonth } from "@/utils/calendar";
 interface CalendarState {
   visibleMonth: Date;
   direction: 1 | -1;
+  requestedDate: Date | null;
   goToPreviousMonth: () => void;
   goToNextMonth: () => void;
   goToToday: () => void;
   setVisibleMonth: (date: Date, direction?: 1 | -1) => void;
+  setRequestedDate: (date: Date | null) => void;
 }
 
 export const useCalendarStore = create<CalendarState>((set, get) => ({
   visibleMonth: startOfMonth(new Date()),
   direction: 1,
+  requestedDate: null,
   goToPreviousMonth: () =>
     set((state) => ({
       visibleMonth: previousMonth(state.visibleMonth),
@@ -37,4 +40,5 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
         direction: direction ?? (nextVisibleMonth >= state.visibleMonth ? 1 : -1),
       };
     }),
+  setRequestedDate: (date) => set({ requestedDate: date }),
 }));

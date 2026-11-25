@@ -2,7 +2,7 @@ import type { KeyboardEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CalendarCell } from "@/components/calendar/CalendarCell";
 import { CalendarHeader } from "@/components/calendar/CalendarHeader";
-import type { CalendarMonth, EventItem, NoteItem } from "@/types";
+import type { CalendarMonth, EventItem, FestivalRecord, NoteItem } from "@/types";
 import { dateKey } from "@/utils/calendar";
 
 interface CalendarGridProps {
@@ -12,6 +12,7 @@ interface CalendarGridProps {
   selectedDate: Date | null;
   eventsByDate?: Record<string, EventItem[]>;
   notesByDate?: Record<string, NoteItem[]>;
+  festivalsByDate?: Record<string, FestivalRecord[]>;
   onSelectDate: (date: Date) => void;
   onEventClick?: (event: EventItem) => void;
   onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void;
@@ -24,6 +25,7 @@ export function CalendarGrid({
   selectedDate,
   eventsByDate = {},
   notesByDate = {},
+  festivalsByDate = {},
   onSelectDate,
   onEventClick,
   onKeyDown,
@@ -65,6 +67,7 @@ export function CalendarGrid({
                 day={day}
                 isSelected={selectedKey === day.dateKey}
                 events={eventsByDate[day.dateKey] || []}
+                festivals={festivalsByDate[day.dateKey] || []}
                 hasNotes={Boolean(notesByDate[day.dateKey]?.length)}
                 onSelect={onSelectDate}
                 onEventClick={onEventClick}

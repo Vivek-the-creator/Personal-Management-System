@@ -20,8 +20,7 @@ interface RequestOptions extends RequestInit {
 
 // In-memory access token (never persisted to localStorage — XSS safe)
 let _accessToken: string | null = null;
-let _isRefreshing = false;
-let _refreshQueue: Array<(token: string | null) => void> = [];
+let _refreshPromise: Promise<string | null> | null = null;
 
 export function setAccessToken(token: string | null): void {
   _accessToken = token;
@@ -31,39 +30,37 @@ export function getAccessToken(): string | null {
   return _accessToken;
 }
 
+/**
+ * Perform token refresh with a single shared promise to prevent race conditions.
+ * If multiple requests trigger a refresh concurrently, all share the same HTTP request.
+ */
 async function executeRefresh(): Promise<string | null> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
-      method: "POST",
-      credentials: "include", // sends the httpOnly refresh token cookie
-    });
-    if (!res.ok) return null;
-    const body = await res.json();
-    const newToken = body.data?.accessToken as string | null;
-    if (newToken) setAccessToken(newToken);
-    return newToken;
-  } catch {
-    return null;
-  }
+  if (_refreshPromise) return _refreshPromise;
+
+  _refreshPromise = (async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: "POST",
+        credentials: "include", // sends the httpOnly refresh token cookie
+      });
+      if (!res.ok) return null;
+      const body = await res.json();
+      const newToken = body.data?.accessToken as string | null;
+      if (newToken) setAccessToken(newToken);
+      return newToken;
+    } catch {
+      return null;
+    } finally {
+      _refreshPromise = null;
+    }
+  })();
+
+  return _refreshPromise;
 }
 
-async function getOrRefreshToken(): Promise<string | null> {
+export async function getOrRefreshToken(): Promise<string | null> {
   if (_accessToken) return _accessToken;
-
-  if (_isRefreshing) {
-    // Queue callers while one refresh is in flight
-    return new Promise((resolve) => {
-      _refreshQueue.push(resolve);
-    });
-  }
-
-  _isRefreshing = true;
-  const newToken = await executeRefresh();
-  _isRefreshing = false;
-
-  _refreshQueue.forEach((cb) => cb(newToken));
-  _refreshQueue = [];
-  return newToken;
+  return executeRefresh();
 }
 
 async function request<T>(
@@ -93,7 +90,7 @@ async function request<T>(
     headers,
   });
 
-  // On 401, attempt one refresh and retry
+  // On 401, attempt one synchronized refresh and retry
   if (response.status === 401 && !skipAuth) {
     setAccessToken(null);
     const newToken = await executeRefresh();

@@ -194,7 +194,7 @@ export function EventForm({
 
     // Network request is done — reminders reflects the real server state
     const existing = reminders.find(
-      (r) => r.status === "PENDING" || r.status === "PROCESSING"
+      (r) => r.status === "PENDING"
     );
 
     if (existing && existing.enabled) {

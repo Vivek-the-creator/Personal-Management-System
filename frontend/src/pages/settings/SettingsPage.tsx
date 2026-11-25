@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Bell, CircleUserRound, Palette, ShieldCheck, Info } from "lucide-react";
+import { Bell, CircleUserRound, Palette, ShieldCheck, Info, RefreshCw, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 const sections = [
   { title: "General", description: "Language, date format, and app defaults.", icon: ShieldCheck, href: "/settings/general" },
   { title: "Appearance", description: "Light, dark, and system theme controls.", icon: Palette, href: "/settings/appearance" },
+  { title: "Festivals & Holidays", description: "Regional holidays, religious observances, and calendar visibility.", icon: Sparkles, href: "/settings/festivals" },
   { title: "Account", description: "Profile details and account preferences.", icon: CircleUserRound, href: "/settings/account" },
   { title: "Notifications", description: "Future reminder preferences and delivery settings.", icon: Bell, href: "/settings/notifications" },
+  { title: "Sync & Data", description: "Offline sync status, manual sync, and offline audit logs.", icon: RefreshCw, href: "/settings/sync" },
   { title: "About", description: "Versioning, product details, and app information.", icon: Info, href: "/settings/about" },
 ];
 

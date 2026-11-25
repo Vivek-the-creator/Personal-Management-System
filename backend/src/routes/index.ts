@@ -7,6 +7,7 @@ import eventRoutes from "./event.routes";
 import noteRoutes from "./note.routes";
 import reminderRoutes from "./reminder.routes";
 import pushRoutes from "./push.routes";
+import syncRoutes from "./sync.routes";
 
 const router = Router();
 
@@ -15,6 +16,9 @@ router.use("/", healthRoutes);
 
 // POST /api/v1/auth/*
 router.use("/auth", authRoutes);
+
+// /api/v1/sync/*
+router.use("/sync", syncRoutes);
 
 // /api/v1/calendars/*
 router.use("/calendars", calendarRoutes);

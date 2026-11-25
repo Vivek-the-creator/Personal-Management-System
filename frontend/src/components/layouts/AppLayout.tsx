@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { AppHeader } from "@/components/navigation/AppHeader";
 import { BottomNavigation } from "@/components/navigation/MobileNavigation";
+import { GlobalSearchModal } from "@/components/search/GlobalSearchModal";
 
 export function AppLayout() {
   return (
@@ -12,6 +13,7 @@ export function AppLayout() {
         </div>
       </main>
       <BottomNavigation />
+      <GlobalSearchModal />
     </div>
   );
 }

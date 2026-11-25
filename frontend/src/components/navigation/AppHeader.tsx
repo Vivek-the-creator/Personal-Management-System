@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, LogOut, Search, Settings, User } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Calculator, CalendarDays, ChevronLeft, ChevronRight, GitBranch, LogOut, Search, Settings, Sparkles, User } from "lucide-react";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { AppLogo } from "@/components/AppLogo";
 import { CalendarSwitcher } from "@/components/calendar-workspace/CalendarSwitcher";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
@@ -15,7 +15,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth, useCalendarEngine } from "@/hooks";
-import { useUserStore } from "@/store";
+import { useSearchModalStore, useUserStore } from "@/store";
+import { cn } from "@/lib/utils";
 
 function getInitials(name: string): string {
   return name
@@ -27,7 +28,13 @@ function getInitials(name: string): string {
 }
 
 export function AppHeader() {
+  const location = useLocation();
+  const isTimelinePage = location.pathname.startsWith("/timeline");
+  const isFestivalsPage = location.pathname.startsWith("/festivals");
+  const isToolsPage = location.pathname.startsWith("/tools");
+  const isSearchPage = location.pathname.startsWith("/search");
   const user = useUserStore((state) => state.user);
+  const openSearch = useSearchModalStore((state) => state.openSearch);
   const { logout } = useAuth();
   const { monthTitle, direction, goToPreviousMonth, goToNextMonth, goToToday } =
     useCalendarEngine();
@@ -40,69 +47,145 @@ export function AppHeader() {
 
         <div className="hidden h-5 w-px bg-border sm:block" aria-hidden="true" />
 
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <div className="min-w-0">
-            <AnimatePresence mode="wait" initial={false} custom={direction}>
-              <motion.h1
-                key={monthTitle}
-                custom={direction}
-                variants={{
-                  enter: (dir: number) => ({ y: dir > 0 ? 8 : -8, opacity: 0 }),
-                  center: { y: 0, opacity: 1 },
-                  exit: (dir: number) => ({ y: dir > 0 ? -8 : 8, opacity: 0 }),
-                }}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ duration: 0.18, ease: "easeOut" }}
-                className="truncate text-base font-semibold text-foreground sm:text-lg"
-              >
-                {monthTitle}
-              </motion.h1>
-            </AnimatePresence>
-          </div>
-          <CalendarSwitcher />
-        </div>
-
-        <nav className="flex items-center gap-1" aria-label="Calendar navigation">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={goToPreviousMonth}
-            aria-label="Previous month"
-            className="h-9 w-9"
+        {/* Desktop Navigation Links */}
+        <nav className="hidden md:flex items-center gap-1" aria-label="Main Navigation">
+          <NavLink
+            to="/calendar"
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors",
+                isActive
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )
+            }
           >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={goToNextMonth}
-            aria-label="Next month"
-            className="h-9 w-9"
+            <CalendarDays className="h-3.5 w-3.5" />
+            Calendar
+          </NavLink>
+          <NavLink
+            to="/timeline"
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors",
+                isActive
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )
+            }
           >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={goToToday}
-            aria-label="Jump to today"
-            className="hidden rounded-lg sm:inline-flex"
+            <GitBranch className="h-3.5 w-3.5" />
+            Timeline
+          </NavLink>
+          <NavLink
+            to="/festivals"
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors",
+                isActive
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )
+            }
           >
-            Today
-          </Button>
+            <Sparkles className="h-3.5 w-3.5" />
+            Festivals
+          </NavLink>
+          <NavLink
+            to="/tools"
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors",
+                isActive
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )
+            }
+          >
+            <Calculator className="h-3.5 w-3.5" />
+            Tools
+          </NavLink>
         </nav>
 
-        <label className="relative hidden md:block">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            aria-label="Search placeholder"
-            placeholder="Search"
-            readOnly
-            className="h-9 w-40 rounded-lg border border-border/60 bg-muted/45 pl-9 pr-3 text-sm text-muted-foreground outline-none transition focus:ring-2 focus:ring-ring lg:w-56"
-          />
-        </label>
+        <div className="hidden h-5 w-px bg-border md:block" aria-hidden="true" />
+
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          {!isTimelinePage && !isFestivalsPage && !isToolsPage ? (
+            <>
+              <div className="min-w-0">
+                <AnimatePresence mode="wait" initial={false} custom={direction}>
+                  <motion.h1
+                    key={monthTitle}
+                    custom={direction}
+                    variants={{
+                      enter: (dir: number) => ({ y: dir > 0 ? 8 : -8, opacity: 0 }),
+                      center: { y: 0, opacity: 1 },
+                      exit: (dir: number) => ({ y: dir > 0 ? -8 : 8, opacity: 0 }),
+                    }}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                    className="truncate text-base font-semibold text-foreground sm:text-lg"
+                  >
+                    {monthTitle}
+                  </motion.h1>
+                </AnimatePresence>
+              </div>
+              <CalendarSwitcher />
+            </>
+          ) : (
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-semibold text-foreground sm:text-lg">Timeline</h1>
+              <CalendarSwitcher />
+            </div>
+          )}
+        </div>
+
+        {!isTimelinePage && !isSearchPage && (
+          <nav className="flex items-center gap-1" aria-label="Calendar navigation">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={goToPreviousMonth}
+              aria-label="Previous month"
+              className="h-9 w-9"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={goToNextMonth}
+              aria-label="Next month"
+              className="h-9 w-9"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToToday}
+              aria-label="Jump to today"
+              className="hidden rounded-lg sm:inline-flex"
+            >
+              Today
+            </Button>
+          </nav>
+        )}
+
+        <button
+          type="button"
+          onClick={openSearch}
+          aria-label="Open global search (Ctrl+K)"
+          className="relative hidden h-9 w-44 items-center gap-2 rounded-lg border border-border/60 bg-muted/45 px-3 text-sm text-muted-foreground transition hover:border-border hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:flex lg:w-56"
+        >
+          <Search className="h-4 w-4 shrink-0" />
+          <span className="flex-1 text-left">Search...</span>
+          <kbd className="rounded border border-border/80 bg-background px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+            Ctrl K
+          </kbd>
+        </button>
 
         <ThemeSwitcher />
 

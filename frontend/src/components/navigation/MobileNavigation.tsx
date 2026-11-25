@@ -16,7 +16,7 @@ export function BottomNavigation() {
         className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
         aria-label="Bottom navigation"
       >
-        <div className="mx-auto grid h-16 max-w-md grid-cols-5">
+        <div className="mx-auto grid h-16 max-w-md grid-cols-6">
           {BOTTOM_NAV_ITEMS.map((item) => {
             const Icon = navIcons[item.icon];
 

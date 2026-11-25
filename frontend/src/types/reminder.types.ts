@@ -9,14 +9,30 @@ export type ReminderType =
 export interface ReminderItem {
   id: string;
   eventId: string;
-  type: ReminderType;
+  type: string;
   scheduledAt: string;
   timezone: string;
   enabled: boolean;
-  status: "PENDING" | "SENT" | "FAILED" | "EXPIRED" | "CANCELLED";
+  status: string;
   sentAt?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CreateReminderBody {
+  eventId: string;
+  type?: string;
+  scheduledAt: string;
+  timezone?: string;
+  enabled?: boolean;
+}
+
+export interface UpdateReminderBody {
+  type?: string;
+  scheduledAt?: string;
+  timezone?: string;
+  enabled?: boolean;
+  status?: string;
 }
 
 export interface ReminderFormConfig {

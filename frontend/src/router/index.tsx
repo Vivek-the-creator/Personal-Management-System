@@ -25,6 +25,12 @@ const TimelinePage = lazy(() =>
 const SearchPage = lazy(() =>
   import("@/pages/search/SearchPage").then((m) => ({ default: m.SearchPage }))
 );
+const FestivalsPage = lazy(() =>
+  import("@/pages/festivals/FestivalsPage").then((m) => ({ default: m.FestivalsPage }))
+);
+const ToolsPage = lazy(() =>
+  import("@/pages/tools/ToolsPage").then((m) => ({ default: m.ToolsPage }))
+);
 const SettingsPage = lazy(() =>
   import("@/pages/settings/SettingsPage").then((m) => ({ default: m.SettingsPage }))
 );
@@ -43,6 +49,14 @@ const NotificationsSettingsPage = lazy(() =>
   import("@/pages/settings/NotificationsSettingsPage").then((m) => ({
     default: m.NotificationsSettingsPage,
   }))
+);
+const FestivalSettingsPage = lazy(() =>
+  import("@/pages/settings/FestivalSettingsPage").then((m) => ({
+    default: m.FestivalSettingsPage,
+  }))
+);
+const SyncSettingsPage = lazy(() =>
+  import("@/pages/settings/SyncSettingsPage").then((m) => ({ default: m.SyncSettingsPage }))
 );
 const AboutSettingsPage = lazy(() =>
   import("@/pages/settings/AboutSettingsPage").then((m) => ({ default: m.AboutSettingsPage }))
@@ -82,12 +96,16 @@ const router = createBrowserRouter([
           // Calendar is the app home screen after login
           { path: ROUTES.CALENDAR, element: <CalendarsPage /> },
           { path: ROUTES.TIMELINE, element: <TimelinePage /> },
+          { path: ROUTES.FESTIVALS, element: <FestivalsPage /> },
+          { path: ROUTES.TOOLS, element: <ToolsPage /> },
           { path: ROUTES.SEARCH, element: <SearchPage /> },
           { path: ROUTES.SETTINGS, element: <SettingsPage /> },
           { path: ROUTES.SETTINGS_GENERAL, element: <GeneralSettingsPage /> },
           { path: ROUTES.SETTINGS_APPEARANCE, element: <AppearanceSettingsPage /> },
           { path: ROUTES.SETTINGS_ACCOUNT, element: <AccountSettingsPage /> },
           { path: ROUTES.SETTINGS_NOTIFICATIONS, element: <NotificationsSettingsPage /> },
+          { path: ROUTES.SETTINGS_FESTIVALS, element: <FestivalSettingsPage /> },
+          { path: ROUTES.SETTINGS_SYNC, element: <SyncSettingsPage /> },
           { path: ROUTES.SETTINGS_ABOUT, element: <AboutSettingsPage /> },
           // Legacy /dashboard → /calendar redirect
           { path: "/dashboard", element: <Navigate to={ROUTES.CALENDAR} replace /> },

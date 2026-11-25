@@ -169,3 +169,20 @@ model PushSubscription {
   @@index([userId])
   @@map("push_subscriptions")
 }
+
+/// Stores the result of each sync operation by operationId (UUID generated client-side).
+/// When the client retries due to a network timeout, the server returns the cached result
+/// instead of re-applying the operation (prevents duplicate creates, etc.).
+/// Entries older than 30 days can be safely purged.
+model SyncIdempotency {
+  id          String   @id @default(cuid())
+  operationId String   @unique
+  userId      String
+  resultJson  String   // JSON-encoded per-operation result
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("sync_idempotency")
+}
+

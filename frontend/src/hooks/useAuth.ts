@@ -3,6 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants";
 import { useUserStore, useThemeStore } from "@/store";
 import { loginService, registerService, logout as logoutService } from "@/services/auth.service";
+import { syncEngine, runInitialSync } from "@/sync";
+import {
+  syncRepository,
+  calendarRepository,
+  eventRepository,
+  noteRepository,
+} from "@/db/repositories";
 import type { LoginCredentials, RegisterCredentials, User } from "@/types";
 
 export function useAuth() {
@@ -12,7 +19,7 @@ export function useAuth() {
   const navigate = useNavigate();
 
   const handleAuthSuccess = useCallback(
-    ({ accessToken, user: userDTO, settings }: Awaited<ReturnType<typeof loginService>>) => {
+    async ({ accessToken, user: userDTO, settings }: Awaited<ReturnType<typeof loginService>>) => {
       const mappedUser: User = {
         id: userDTO.id,
         email: userDTO.email,
@@ -27,6 +34,21 @@ export function useAuth() {
         setTheme(settings.theme as "light" | "dark" | "system");
       }
 
+      // Sync Setup for newly authenticated user
+      syncEngine.setUserId(mappedUser.id);
+
+      const storedUserId = await syncRepository.getSyncedUserId();
+      if (storedUserId && storedUserId !== mappedUser.id) {
+        await syncRepository.clearAll().catch(() => {});
+        await calendarRepository.clearForUser(storedUserId).catch(() => {});
+        await eventRepository.clearForUser(storedUserId).catch(() => {});
+        await noteRepository.clearForUser(storedUserId).catch(() => {});
+      }
+
+      // Download server data into IndexedDB
+      await runInitialSync({ userId: mappedUser.id }).catch(() => {});
+      syncEngine.trigger("login");
+
       navigate(ROUTES.CALENDAR, { replace: true });
     },
     [navigate, setUser, setTheme]
@@ -37,7 +59,7 @@ export function useAuth() {
       setLoading(true);
       try {
         const authData = await loginService(credentials);
-        handleAuthSuccess(authData);
+        await handleAuthSuccess(authData);
       } catch (err) {
         console.error("[Auth] Login failed:", err);
         throw err;
@@ -53,7 +75,7 @@ export function useAuth() {
       setLoading(true);
       try {
         const authData = await registerService(credentials);
-        handleAuthSuccess(authData);
+        await handleAuthSuccess(authData);
       } catch (err) {
         console.error("[Auth] Registration failed:", err);
         throw err;
@@ -70,10 +92,18 @@ export function useAuth() {
     } catch {
       // Always clear local state even if server call fails
     } finally {
+      const currentUserId = user?.id;
+      if (currentUserId) {
+        await calendarRepository.clearForUser(currentUserId).catch(() => {});
+        await eventRepository.clearForUser(currentUserId).catch(() => {});
+        await noteRepository.clearForUser(currentUserId).catch(() => {});
+      }
+      await syncRepository.clearAll().catch(() => {});
+      syncEngine.setUserId(null);
       clearStore();
       navigate(ROUTES.LOGIN, { replace: true });
     }
-  }, [clearStore, navigate]);
+  }, [clearStore, navigate, user?.id]);
 
   return {
     user,
